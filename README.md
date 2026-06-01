@@ -1,3 +1,5 @@
+PROYEK IOT FOR SMART CAMPUS USING LORA-ESP32-INA219 3RKSA - Kapita Selekta (Peperangan Elektronika)
+
 Done
 1. Make baseline (without sensor)
 2. Membuat scheme
