@@ -1,0 +1,62 @@
+#include <SPI.h>
+#include <LoRa.h>
+
+// Pin SPI ESP32-S3
+#define LORA_SCK   12
+#define LORA_MISO  13
+#define LORA_MOSI  11
+#define LORA_SS    10
+
+// Pin kontrol LoRa
+#define LORA_RST   5
+#define LORA_DIO0  4
+
+#define LORA_FREQ  433E6
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+
+  Serial.println();
+  Serial.println("=== ESP32-S3 LoRa RX ===");
+
+  SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
+  LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
+
+  if (!LoRa.begin(LORA_FREQ)) {
+    Serial.println("LoRa init gagal. Cek wiring, power 3.3V, antena, dan frekuensi.");
+    while (true);
+  }
+
+  LoRa.setSpreadingFactor(7);
+  LoRa.setSignalBandwidth(125E3);
+  LoRa.setCodingRate4(5);
+
+  Serial.println("LoRa RX siap menerima pesan.");
+}
+
+void loop() {
+  int packetSize = LoRa.parsePacket();
+
+  if (packetSize) {
+    String received = "";
+
+    while (LoRa.available()) {
+      received += (char)LoRa.read();
+    }
+
+    Serial.println();
+    Serial.println("================================");
+    Serial.println("Paket diterima:");
+    Serial.println(received);
+
+    Serial.print("RSSI: ");
+    Serial.print(LoRa.packetRssi());
+    Serial.println(" dBm");
+
+    Serial.print("SNR: ");
+    Serial.print(LoRa.packetSnr());
+    Serial.println(" dB");
+    Serial.println("================================");
+  }
+}
