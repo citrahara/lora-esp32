@@ -1,0 +1,72 @@
+#include <SPI.h>
+#include <LoRa.h>
+
+// Pin SPI ESP32-S3
+#define LORA_SCK   12
+#define LORA_MISO  13
+#define LORA_MOSI  11
+#define LORA_SS    10
+
+// Pin kontrol LoRa
+#define LORA_RST   5
+#define LORA_DIO0  4
+
+// RA-02 SX1278 biasanya 433 MHz
+#define LORA_FREQ  433E6
+
+int counter = 0;
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+
+  Serial.println();
+  Serial.println("=== ESP32-S3 LoRa TX ===");
+  Serial.println("Ketik pesan di Serial Monitor, lalu tekan Enter.");
+  Serial.println("Pastikan line ending: Newline / Both NL & CR");
+  Serial.println();
+
+  SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_SS);
+  LoRa.setPins(LORA_SS, LORA_RST, LORA_DIO0);
+
+  if (!LoRa.begin(LORA_FREQ)) {
+    Serial.println("LoRa init gagal. Cek wiring, power 3.3V, antena, dan frekuensi.");
+    while (true);
+  }
+
+  LoRa.setSpreadingFactor(7);
+  LoRa.setSignalBandwidth(125E3);
+  LoRa.setCodingRate4(5);
+  LoRa.setTxPower(17);
+
+  Serial.println("LoRa TX siap.");
+  Serial.println("Masukkan pesan:");
+}
+
+void loop() {
+  if (Serial.available()) {
+    String inputMessage = Serial.readStringUntil('\n');
+    inputMessage.trim();
+
+    if (inputMessage.length() == 0) {
+      return;
+    }
+
+    counter++;
+
+    String packet = "node_id=K1_TX;";
+    packet += "counter=" + String(counter) + ";";
+    packet += "message=" + inputMessage;
+
+    Serial.println();
+    Serial.println("Mengirim paket:");
+    Serial.println(packet);
+
+    LoRa.beginPacket();
+    LoRa.print(packet);
+    LoRa.endPacket();
+
+    Serial.println("Status: paket terkirim.");
+    Serial.println("Masukkan pesan berikutnya:");
+  }
+}
